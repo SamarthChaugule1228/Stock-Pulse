@@ -10,7 +10,7 @@ The current application includes a Spring Boot backend, a React merchandising co
 
 - Product catalog with stock, price, category, demand velocity, and lifecycle state.
 - Low-inventory detection when stock falls below the reorder threshold.
-- Demand-spike detection using a configurable category comparison multiplier.
+- Demand-spike recommendations on category-peer threshold crossings and on new sales while the dashboard marks velocity above 10 as `DEMAND SPIKE`.
 - Rule-based pricing and reorder recommendations.
 - Optional OpenAI-compatible LLM strategy with response validation and rule fallback.
 - Runtime switching between `RULE` and `AI` commerce strategies.
@@ -71,7 +71,7 @@ flowchart TD
     A[Stock update or simulated order] --> B[Persist inventory change]
     B --> C{Signal detected?}
     C -->|Stock below threshold| D[InventoryChangedEvent]
-    C -->|Demand crosses multiplier| E[DemandSpikeEvent]
+    C -->|Demand crosses peer multiplier or remains above dashboard spike marker on a new sale| E[DemandSpikeEvent]
     C -->|No| F[Return HTTP response]
     D --> G[Async InventoryEventListener]
     E --> G
@@ -138,7 +138,9 @@ cd frontend
 npm run build
 ```
 
-The default commerce strategy is `RULE`. AI mode is optional and uses environment variables for the LLM gateway; credentials are not stored in this repository.
+The default commerce strategy is `AI`; override it with `COMMERCE_STRATEGY=RULE` when needed. AI requests use the OpenAI-compatible LiteLLM gateway configured by `LLM_BASE_URL` and `LLM_MODEL` (default `qwen-cursor`). Set `LLM_API_KEY` in your local ignored `.env` file or environment; credentials must not be committed. If an AI request fails or returns invalid data, the backend falls back to `RULE` and logs the recommendation source.
+
+Demand-spike events are generated when velocity crosses the configured category-peer multiplier or when another sale occurs while the product is still above the dashboard's `>10` velocity marker. This keeps recommendations aligned with products displayed as `DEMAND SPIKE`.
 
 ## 7. Complete Project Structure
 

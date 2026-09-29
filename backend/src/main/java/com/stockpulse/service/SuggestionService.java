@@ -92,10 +92,17 @@ public class SuggestionService {
 		CommerceContext context = new CommerceContext(product.getId(), product.getName(), product.getCategory(),
 				product.getCurrentPrice(), product.getStockLevel(), product.getReorderThreshold(), product.getDemandVelocity(),
 				productRepository.averageDemandVelocityByCategory(product.getCategory()), triggerReason);
+		String selectedStrategy = commerceAdvisor.getActiveStrategy();
 		try {
-			return commerceAdvisor.recommend(context);
+			CommerceRecommendation recommendation = commerceAdvisor.recommend(context);
+			log.info("Recommendation generated source={} productId={} trigger={}", selectedStrategy, product.getId(), triggerReason);
+			return recommendation;
 		} catch (AiServiceException exception) {
-			log.warn("Commerce AI unavailable for product {}: {}; using rule fallback", product.getId(), exception.getMessage());
+			if (!"AI".equals(selectedStrategy)) {
+				throw exception;
+			}
+			log.warn("Recommendation source=RULE_FALLBACK selectedStrategy=AI productId={} trigger={} reason={}",
+					product.getId(), triggerReason, exception.getMessage());
 			return commerceAdvisor.ruleRecommendation(context);
 		}
 	}

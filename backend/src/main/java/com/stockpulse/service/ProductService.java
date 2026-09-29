@@ -24,6 +24,7 @@ import java.util.List;
 
 @Service
 public class ProductService {
+	private static final int DASHBOARD_DEMAND_SPIKE_VELOCITY = 10;
 
 	private final ProductRepository productRepository;
 	private final InventorySnapshotRepository snapshotRepository;
@@ -89,6 +90,8 @@ public class ProductService {
 			throw new IllegalArgumentException("Insufficient stock for order");
 		}
 		int previousDemand = product.getDemandVelocity();
+		double categoryPeerAverage = productRepository.averageDemandVelocityByCategoryExcludingProduct(
+				product.getCategory(), product.getId());
 		for (int index = 0; index < request.quantity(); index++) {
 			product.recordSale();
 		}
@@ -101,9 +104,11 @@ public class ProductService {
 		if (saved.getStockLevel() < saved.getReorderThreshold()) {
 			eventPublisher.publishEvent(new InventoryChangedEvent(saved.getId(), TriggerReason.INVENTORY_LOW));
 		}
-		double average = productRepository.averageDemandVelocityByCategory(saved.getCategory());
-		if (previousDemand < demandSpikeMultiplier * average
-				&& saved.getDemandVelocity() >= demandSpikeMultiplier * average) {
+		double demandSpikeThreshold = demandSpikeMultiplier * categoryPeerAverage;
+		boolean crossedCategoryThreshold = previousDemand < demandSpikeThreshold
+				&& saved.getDemandVelocity() >= demandSpikeThreshold;
+		boolean stillShownAsDemandSpike = saved.getDemandVelocity() > DASHBOARD_DEMAND_SPIKE_VELOCITY;
+		if (crossedCategoryThreshold || stillShownAsDemandSpike) {
 			eventPublisher.publishEvent(new DemandSpikeEvent(saved.getId()));
 		}
 		return toResponse(saved);

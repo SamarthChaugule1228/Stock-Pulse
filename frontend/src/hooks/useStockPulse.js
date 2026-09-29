@@ -107,29 +107,5 @@ export function useStockPulse() {
     return runAction(() => decide(suggestion.backendId, status));
   };
 
-  const generateSuggestions = () => runAction(async () => {
-    const pendingKeys = new Set(
-      suggestions.filter((suggestion) => suggestion.status === 'PENDING')
-        .map((suggestion) => `${suggestion.productId}:${suggestion.type}`),
-    );
-    const slots = products.flatMap((product) => [
-      { productId: product.id, type: 'pricing' },
-      { productId: product.id, type: 'reorder' },
-    ]).filter((slot) => !pendingKeys.has(`${slot.productId}:${slot.type}`)).slice(0, 8);
-
-    await Promise.all(slots.map((slot) => slot.type === 'pricing'
-      ? productApi.suggestPricing(slot.productId)
-      : productApi.suggestReorder(slot.productId)));
-  });
-
-  const generateThresholdPriceTest = () => runAction(async () => {
-    const nearThreshold = products.find((product) => product.stock === product.threshold - 1)
-      || products.find((product) => product.stock < product.threshold);
-    if (!nearThreshold) {
-      throw new Error('No product is currently just below its reorder threshold');
-    }
-    await productApi.suggestPricing(nearThreshold.id);
-  });
-
-  return { products, suggestions, loading, busy, error, refresh, simulateSale, updateStock, decideSuggestion, generateSuggestions, generateThresholdPriceTest };
+  return { products, suggestions, loading, busy, error, refresh, simulateSale, updateStock, decideSuggestion };
 }

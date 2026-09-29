@@ -19,4 +19,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 	@Query("select coalesce(avg(p.demandVelocity), 0) from Product p where p.category = :category")
 	double averageDemandVelocityByCategory(@Param("category") Category category);
+
+	@Query("select coalesce(avg(p.demandVelocity), 0) from Product p where p.category = :category and p.id <> :productId")
+	double averageDemandVelocityByCategoryExcludingProduct(@Param("category") Category category,
+																				 @Param("productId") Long productId);
 }

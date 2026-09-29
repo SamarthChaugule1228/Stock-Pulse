@@ -16,6 +16,4 @@ export const productApi = {
 	list: () => request('/products'),
 	order: (id, quantity = 1) => request(`/products/${id}/orders`, { method: 'POST', body: JSON.stringify({ quantity }) }),
 	updateStock: (id, stockLevel) => request(`/products/${id}/stock`, { method: 'PATCH', body: JSON.stringify({ stockLevel }) }),
-	suggestPricing: (id) => request(`/products/${id}/suggest-pricing`, { method: 'POST' }),
-	suggestReorder: (id) => request(`/products/${id}/suggest-reorder`, { method: 'POST' }),
 };

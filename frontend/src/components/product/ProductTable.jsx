@@ -14,7 +14,7 @@ export default function ProductTable({ products, onSale, onStockChange }) {
               <td><StockIndicator stock={product.stock} threshold={product.threshold} /></td>
               <td><strong className="table-price">${product.price.toFixed(2)}</strong></td>
               <td><span className="velocity"><i />{product.velocity}<small>/24h</small></span></td>
-              <td><span className={`lifecycle ${low ? 'review' : 'active'}`}>{low ? 'REVIEW' : 'ACTIVE'}</span></td>
+              <td><span className={`health-state ${low ? 'low' : product.velocity > 10 ? 'spike' : product.stock < product.threshold * 1.5 ? 'watch' : 'healthy'}`}><i />{low ? 'LOW STOCK' : product.velocity > 10 ? 'DEMAND SPIKE' : product.stock < product.threshold * 1.5 ? 'WATCH' : 'HEALTHY'}</span></td>
               <td><button className="table-sale" type="button" onClick={() => onSale(product.id)} aria-label={`Simulate sale for ${product.name}`}>↗</button></td>
             </tr>;
           })}

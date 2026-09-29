@@ -49,10 +49,53 @@ class SuggestionServiceTest {
         Product product = product();
         when(products.findById(1L)).thenReturn(Optional.of(product));
         when(products.averageDemandVelocityByCategory(Category.APPAREL)).thenReturn(5.0);
+        when(advisor.getActiveStrategy()).thenReturn("AI");
         when(advisor.recommend(any(CommerceContext.class))).thenThrow(new AiServiceException("timeout"));
         when(advisor.ruleRecommendation(any(CommerceContext.class))).thenReturn(recommendation());
 
         new SuggestionService(products, pricing, reorder, advisor).process(1L, TriggerReason.DEMAND_SPIKE);
+
+        verify(advisor).ruleRecommendation(any(CommerceContext.class));
+        verify(pricing).save(any());
+        verify(reorder).save(any());
+    }
+
+    @Test
+    void usesSelectedAiStrategyForInventoryAndDemandSuggestions() {
+        ProductRepository products = mock(ProductRepository.class);
+        PricingSuggestionRepository pricing = mock(PricingSuggestionRepository.class);
+        ReorderSuggestionRepository reorder = mock(ReorderSuggestionRepository.class);
+        CommerceAdvisor advisor = mock(CommerceAdvisor.class);
+        Product product = product();
+        when(products.findById(1L)).thenReturn(Optional.of(product));
+        when(products.averageDemandVelocityByCategory(Category.APPAREL)).thenReturn(5.0);
+        when(advisor.getActiveStrategy()).thenReturn("AI");
+        when(advisor.recommend(any(CommerceContext.class))).thenReturn(recommendation());
+        SuggestionService service = new SuggestionService(products, pricing, reorder, advisor);
+
+        service.process(1L, TriggerReason.INVENTORY_LOW);
+        service.process(1L, TriggerReason.DEMAND_SPIKE);
+
+        verify(advisor, times(2)).recommend(any(CommerceContext.class));
+        verify(advisor, never()).ruleRecommendation(any(CommerceContext.class));
+        verify(pricing, times(2)).save(any());
+        verify(reorder, times(2)).save(any());
+    }
+
+    @Test
+    void fallsBackToRulesForInventoryLowWhenAiResponseIsInvalid() {
+        ProductRepository products = mock(ProductRepository.class);
+        PricingSuggestionRepository pricing = mock(PricingSuggestionRepository.class);
+        ReorderSuggestionRepository reorder = mock(ReorderSuggestionRepository.class);
+        CommerceAdvisor advisor = mock(CommerceAdvisor.class);
+        Product product = product();
+        when(products.findById(1L)).thenReturn(Optional.of(product));
+        when(products.averageDemandVelocityByCategory(Category.APPAREL)).thenReturn(5.0);
+        when(advisor.getActiveStrategy()).thenReturn("AI");
+        when(advisor.recommend(any(CommerceContext.class))).thenThrow(new AiServiceException("Malformed AI response"));
+        when(advisor.ruleRecommendation(any(CommerceContext.class))).thenReturn(recommendation());
+
+        new SuggestionService(products, pricing, reorder, advisor).process(1L, TriggerReason.INVENTORY_LOW);
 
         verify(advisor).ruleRecommendation(any(CommerceContext.class));
         verify(pricing).save(any());

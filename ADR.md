@@ -98,7 +98,7 @@ Options:
 
 Decision:
 
-`ProductService` commits the inventory/order mutation and publishes `InventoryChangedEvent` or `DemandSpikeEvent`. `InventoryEventListener` receives events with `@TransactionalEventListener(AFTER_COMMIT)` and delegates to `SuggestionService` on `commerceTaskExecutor`. The repository checks for an existing `PENDING` suggestion by product, trigger reason, and suggestion type before saving.
+`ProductService` commits the inventory/order mutation and publishes `InventoryChangedEvent` or `DemandSpikeEvent`. Demand velocity is compared with the average of category peers, excluding the product being ordered. `InventoryEventListener` receives events with `@TransactionalEventListener(AFTER_COMMIT)` and delegates to `SuggestionService` on `commerceTaskExecutor`. The repository checks for an existing `PENDING` suggestion by product, trigger reason, and suggestion type before saving.
 
 Tradeoffs:
 
