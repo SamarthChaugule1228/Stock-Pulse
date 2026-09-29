@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: stockpulse
+  datasource:
+    url: jdbc:h2:file:./data/stockpulse;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+commerce:
+  strategy: ${COMMERCE_STRATEGY:RULE}
+  demand-spike-multiplier: ${DEMAND_SPIKE_MULTIPLIER:3.0}
+
+llm:
+  base-url: ${LLM_BASE_URL:}
+  api-key: ${LLM_API_KEY:}
+  model: ${LLM_MODEL:}
+  product: ${LLM_PRODUCT:}
+  cookie: ${LLM_COOKIE:}
