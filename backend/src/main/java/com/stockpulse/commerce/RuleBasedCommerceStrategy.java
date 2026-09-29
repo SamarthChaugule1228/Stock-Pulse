@@ -1,6 +1,7 @@
 package com.stockpulse.commerce;
 
 import com.stockpulse.enums.PricingDirection;
+import com.stockpulse.enums.TriggerReason;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,12 +23,13 @@ public class RuleBasedCommerceStrategy implements CommerceStrategy {
 			direction = PricingDirection.INCREASE;
 			pricingConfidence = 0.90;
 			pricingReasoning = "Inventory is below the reorder threshold, so the baseline rule recommends a 10% price increase to protect scarce stock.";
-		} else if (context.demandVelocity() > 2 * context.categoryAverageDemandVelocity()) {
+		} else if (context.triggerReason() == TriggerReason.DEMAND_SPIKE
+				|| context.demandVelocity() > 2 * context.categoryAverageDemandVelocity()) {
 			recommendedPrice = context.currentPrice().multiply(BigDecimal.valueOf(1.05))
 					.setScale(2, RoundingMode.HALF_UP);
 			direction = PricingDirection.INCREASE;
 			pricingConfidence = 0.85;
-			pricingReasoning = "Demand velocity is more than twice the category average, so the baseline rule recommends a 5% price increase for the spike.";
+			pricingReasoning = "A demand-spike signal was detected, so the baseline rule recommends a 5% price increase.";
 		}
 
 		int quantity = Math.max(1, context.reorderThreshold() * 3 - context.stockLevel());

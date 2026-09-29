@@ -4,7 +4,7 @@
 
 StockPulse is an inventory intelligence and dynamic pricing application for merchandisers. It detects low inventory and demand signals, creates pricing and replenishment suggestions, and keeps a human approval checkpoint before applying changes.
 
-The current application includes a Spring Boot backend, a React merchandising console, rule-based recommendations, optional AI recommendations, asynchronous event processing, and persistent local H2 storage.
+The current application includes a Spring Boot backend, a React merchandising console, AI recommendations by default with a rule-based fallback, asynchronous event processing, and persistent local H2 storage.
 
 ## 2. Key Features
 
@@ -12,7 +12,7 @@ The current application includes a Spring Boot backend, a React merchandising co
 - Low-inventory detection when stock falls below the reorder threshold.
 - Demand-spike recommendations on category-peer threshold crossings and on new sales while the dashboard marks velocity above 10 as `DEMAND SPIKE`.
 - Rule-based pricing and reorder recommendations.
-- Optional OpenAI-compatible LLM strategy with response validation and rule fallback.
+- OpenAI-compatible LLM strategy with response validation and rule fallback.
 - Runtime switching between `RULE` and `AI` commerce strategies.
 - Asynchronous Spring event processing with `@Async` after inventory changes commit.
 - Idempotency for pending suggestions by product, trigger, and suggestion type.
@@ -140,7 +140,7 @@ npm run build
 
 The default commerce strategy is `AI`; override it with `COMMERCE_STRATEGY=RULE` when needed. AI requests use the OpenAI-compatible LiteLLM gateway configured by `LLM_BASE_URL` and `LLM_MODEL` (default `qwen-cursor`). Set `LLM_API_KEY` in your local ignored `.env` file or environment; credentials must not be committed. If an AI request fails or returns invalid data, the backend falls back to `RULE` and logs the recommendation source.
 
-Demand-spike events are generated when velocity crosses the configured category-peer multiplier or when another sale occurs while the product is still above the dashboard's `>10` velocity marker. This keeps recommendations aligned with products displayed as `DEMAND SPIKE`.
+Demand-spike events are generated when velocity crosses the configured category-peer multiplier or when another sale occurs while the product is still above the dashboard's `>10` velocity marker. This keeps recommendations aligned with products displayed as `DEMAND SPIKE`. The rule fallback also treats an explicit `DEMAND_SPIKE` trigger as a spike, even when the category-average heuristic alone would hold the price.
 
 ## 7. Complete Project Structure
 

@@ -31,6 +31,17 @@ class RuleBasedCommerceStrategyTest {
     }
 
     @Test
+    void raisesPriceForDemandSpikeTriggerEvenWhenPeerAverageIsHigh() {
+        CommerceContext demandSpike = new CommerceContext(1L, "Trending T-Shirt", Category.APPAREL,
+                new BigDecimal("24.99"), 30, 10, 17, 15, TriggerReason.DEMAND_SPIKE);
+
+        CommerceRecommendation result = strategy.recommend(demandSpike);
+
+        assertThat(result.recommendedPrice()).isEqualByComparingTo("26.24");
+        assertThat(result.pricingDirection()).isEqualTo(PricingDirection.INCREASE);
+    }
+
+    @Test
     void holdsPriceOtherwise() {
         CommerceRecommendation result = strategy.recommend(context(30, 10, 5, 5));
 
