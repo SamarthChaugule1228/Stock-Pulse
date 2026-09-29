@@ -91,42 +91,191 @@ flowchart TD
     P -->|Reject| S[Keep product state]
 ```
 
-## 6. Project Structure
+## 6. How to Run the Project
+
+### Prerequisites
+
+- Java 17 or newer
+- Maven
+- Node.js and npm
+
+### Start the Backend
+
+From the project root:
+
+```powershell
+cd backend
+mvn spring-boot:run
+```
+
+The backend runs at `http://localhost:8080`. It uses file-backed H2 storage in `backend/data/` and seeds demo products when the database is empty.
+
+### Start the Frontend
+
+Open a second terminal from the project root:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open the Vite URL shown in the terminal, usually `http://localhost:5173` or `http://127.0.0.1:5173`.
+
+### Run Tests and Build
+
+Backend tests:
+
+```powershell
+cd backend
+mvn test
+```
+
+Frontend production build:
+
+```powershell
+cd frontend
+npm run build
+```
+
+The default commerce strategy is `RULE`. AI mode is optional and uses environment variables for the LLM gateway; credentials are not stored in this repository.
+
+## 7. Complete Project Structure
 
 ```text
 stockpulse/
+├── README.md
+├── ADR.md
+├── .gitignore
+├── docker-compose.yml
 ├── backend/
 │   ├── pom.xml
 │   └── src/
 │       ├── main/java/com/stockpulse/
-│       │   ├── ai/             # LLM client, prompts, parser, validation
-│       │   ├── commerce/       # Advisor, strategies, context, output
-│       │   ├── config/         # Async, CORS, web, LLM configuration
-│       │   ├── controller/     # REST endpoints
-│       │   ├── dto/            # Request and response contracts
-│       │   ├── entity/         # JPA domain model
-│       │   ├── enums/          # Categories and state enums
-│       │   ├── event/          # Inventory events and async listener
-│       │   ├── exception/      # Domain errors and REST handler
-│       │   ├── repository/     # Spring Data repositories
-│       │   ├── seed/           # Demo data initializer
-│       │   └── service/        # Application services
-│       └── main/resources/
-│           ├── application.yml
-│           └── data.sql
+│       │   ├── StockPulseApplication.java
+│       │   ├── ai/
+│       │   │   ├── AiPromptBuilder.java
+│       │   │   ├── AiRecommendationPayload.java
+│       │   │   ├── AiRecommendationValidator.java
+│       │   │   ├── AiResponseParser.java
+│       │   │   ├── LiteLlmClient.java
+│       │   │   └── LlmClient.java
+│       │   ├── commerce/
+│       │   │   ├── AiCommerceStrategy.java
+│       │   │   ├── CommerceAdvisor.java
+│       │   │   ├── CommerceContext.java
+│       │   │   ├── CommerceRecommendation.java
+│       │   │   ├── CommerceStrategy.java
+│       │   │   └── RuleBasedCommerceStrategy.java
+│       │   ├── config/
+│       │   │   ├── AsyncConfig.java
+│       │   │   ├── CorsConfig.java
+│       │   │   ├── LlmConfig.java
+│       │   │   └── WebConfig.java
+│       │   ├── controller/
+│       │   │   ├── CommerceStrategyController.java
+│       │   │   ├── PricingSuggestionController.java
+│       │   │   ├── ProductController.java
+│       │   │   └── ReorderSuggestionController.java
+│       │   ├── dto/
+│       │   │   ├── order/OrderRequest.java
+│       │   │   ├── product/CreateProductRequest.java
+│       │   │   ├── product/ProductResponse.java
+│       │   │   ├── product/UpdateStockRequest.java
+│       │   │   └── suggestion/
+│       │   │       ├── PricingSuggestionResponse.java
+│       │   │       ├── ReorderSuggestionResponse.java
+│       │   │       └── SuggestionDecisionRequest.java
+│       │   ├── entity/
+│       │   │   ├── InventorySnapshot.java
+│       │   │   ├── PricingSuggestion.java
+│       │   │   ├── Product.java
+│       │   │   └── ReorderSuggestion.java
+│       │   ├── enums/
+│       │   │   ├── Category.java
+│       │   │   ├── PricingDirection.java
+│       │   │   ├── ProductLifecycle.java
+│       │   │   ├── SuggestionStatus.java
+│       │   │   └── TriggerReason.java
+│       │   ├── event/
+│       │   │   ├── DemandSpikeEvent.java
+│       │   │   ├── InventoryChangedEvent.java
+│       │   │   └── InventoryEventListener.java
+│       │   ├── exception/
+│       │   │   ├── AiServiceException.java
+│       │   │   ├── GlobalExceptionHandler.java
+│       │   │   ├── InvalidSuggestionException.java
+│       │   │   └── ResourceNotFoundException.java
+│       │   ├── repository/
+│       │   │   ├── InventorySnapshotRepository.java
+│       │   │   ├── PricingSuggestionRepository.java
+│       │   │   ├── ProductRepository.java
+│       │   │   └── ReorderSuggestionRepository.java
+│       │   ├── seed/DataInitializer.java
+│       │   └── service/
+│       │       ├── InventoryService.java
+│       │       ├── PricingSuggestionService.java
+│       │       ├── ProductService.java
+│       │       ├── ReorderSuggestionService.java
+│       │       └── SuggestionService.java
+│       ├── main/resources/
+│       │   ├── application.yml
+│       │   └── data.sql
+│       └── test/java/com/stockpulse/
+│           ├── StockPulseApplicationTest.java
+│           ├── ai/AiRecommendationValidatorTest.java
+│           ├── commerce/RuleBasedCommerceStrategyTest.java
+│           ├── event/InventoryEventListenerTest.java
+│           └── service/
+│               ├── SuggestionApprovalServiceTest.java
+│               └── SuggestionServiceTest.java
 ├── frontend/
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── vite.config.js
+│   ├── index.html
 │   └── src/
-│       ├── api/                # Backend request modules
-│       ├── components/         # Layout, product, suggestion, common UI
-│       ├── constants/          # UI constants and demo data
-│       ├── hooks/              # Shared StockPulse state and polling
-│       ├── pages/              # Dashboard, Products, Suggestions
-│       └── styles/             # Responsive dark dashboard styling
-├── ADR.md
-└── docker-compose.yml
+│       ├── App.jsx
+│       ├── main.jsx
+│       ├── api/
+│       │   ├── productApi.js
+│       │   └── suggestionApi.js
+│       ├── components/
+│       │   ├── common/
+│       │   │   ├── Button.jsx
+│       │   │   ├── EmptyState.jsx
+│       │   │   ├── ErrorState.jsx
+│       │   │   └── LoadingState.jsx
+│       │   ├── layout/
+│       │   │   ├── DashboardLayout.jsx
+│       │   │   ├── Header.jsx
+│       │   │   └── Sidebar.jsx
+│       │   ├── product/
+│       │   │   ├── ProductCard.jsx
+│       │   │   ├── ProductTable.jsx
+│       │   │   └── StockIndicator.jsx
+│       │   └── suggestion/
+│       │       ├── ConfidenceBadge.jsx
+│       │       ├── PricingSuggestion.jsx
+│       │       ├── ReorderSuggestion.jsx
+│       │       ├── SuggestionCard.jsx
+│       │       └── TriggerBadge.jsx
+│       ├── constants/
+│       │   └── mockData.js
+│       ├── hooks/
+│       │   ├── useProducts.js
+│       │   ├── useStockPulse.js
+│       │   └── useSuggestions.js
+│       ├── pages/
+│       │   ├── Dashboard.jsx
+│       │   ├── Products.jsx
+│       │   └── Suggestions.jsx
+│       ├── services/pollingService.js
+│       └── styles/
+│           └── app.css
 ```
 
-## 7. API Endpoints
+## 8. API Endpoints
 
 ### Products
 
